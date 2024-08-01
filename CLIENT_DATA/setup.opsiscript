@@ -1,0 +1,105 @@
+; ----------------------------------------------------------------
+; This is a opsi-script file.
+; See https://opsi.org    https://uib.de
+; This code was originally created by opsi-setup-detector 4.3.2.6
+; ----------------------------------------------------------------
+encoding=utf8
+
+;here we start
+[Actions]
+
+;check if the running opsiscript version is not too old
+requiredOpsiscriptVersion >= "4.12.5.0"
+
+;fetch helper libraries
+importlib "uib_exitcode.opsiscript"
+importlib "osd-lib.opsiscript"
+
+
+; All variables are defined here:
+include_insert "declarations.opsiinc"
+; All sections are defined here:
+include_append "sections.opsiinc"
+
+; ----------------------------------------------------------------
+comment "put fixed infos into the script (maybe produced by the setup detector maybe manually)"
+; ----------------------------------------------------------------
+; the values can be manually edited or automatically suggested by the opsi setup detector
+;
+; ----------------------------------------------------------------
+; $ProductId$ is the name of the product in opsi, only lower letters, no umlauts, no white spaces, use '-' as a separator
+Set $ProductId$		= "winfsp-20-23075"
+; the path where we find the product after the installation
+Set $InstallDir$	= "unknown"
+set $targetprogram$ = ""
+Set $MinimumSpace$	 = "13 MB"
+; ----------------------------------------------------------------
+; the operating system, in which the interpreter is running
+; supported values are  "Windows_NT", "Linux", "MacOS"
+set $OS$ = GetOS
+
+Message "Installing " + $ProductId$ + " ..."
+
+; ----------------------------------------------------------------
+comment  "check if the script is adequate to the environment"
+; ----------------------------------------------------------------
+
+if not(($OS$ = "Windows_NT"))
+	logError "Installation aborted: wrong OS version: only Windows"
+	isFatalError "wrong OS"
+	; Stop process and set installation status to failed
+endif
+
+if not(HasMinimumSpace ("%SystemDrive%", $MinimumSpace$))
+	LogError "Not enough space on %SystemDrive%, " + $MinimumSpace$ + " on drive %SystemDrive% needed for " + $ProductId$
+	isFatalError "No Space"
+	; Stop process and set installation status to failed
+endif
+
+; ---------------------------------------------------------------
+comment "inform the user at the PC about product installation"
+; ----------------------------------------------------------------
+; for a better visual appearance, show some graphic (at most of size 160x160 [px] )
+comment "Show product picture"
+ShowBitmap "%ScriptPath%\" + $ProductId$ + ".png" $ProductId$
+
+
+
+set $installerSourceDir$ = "%scriptpath%\files1"
+
+if FileExists("%ScriptPath%\delinc.opsiinc") 
+	comment "Start uninstall part"
+	include_insert "%ScriptPath%\delinc.opsiinc"
+endif
+
+Message "Installing " + $ProductId$ + " ..."
+
+
+; ---------------------------------------------------------------
+comment "run  the setup program"
+; ----------------------------------------------------------------
+
+; the call to the installer is more stable if we set the path
+ChangeDirectory $installerSourceDir$
+;----------------------------------------------
+Winbatch_install_1 /sysnative 
+;----------------------------------------------
+; ---------------------------------------------------------------
+comment "check the result"
+; ----------------------------------------------------------------
+; check the outcome of the call, produce either a "failed" state of the script or log the result
+set $ExitCode$ = getlastexitcode
+if "true" = isMsiExitcodeFatal($exitcode$, "true", $ErrorString$ )
+	includelog "%opsiLogDir%\"+$ProductId$+".install_log.txt" "50" "utf16le"
+	
+	LogError $ErrorString$
+	isfatalerror $ErrorString$
+else
+	Comment $ErrorString$
+endif
+
+
+
+; ----------------------------------------------------------------
+; ----------------------------------------------------------------
+

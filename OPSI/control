@@ -1,0 +1,21 @@
+[Package]
+version: 1
+depends: 
+
+[Product]
+type: localboot
+id: winfsp-20-23075
+name: WinFsp 2023
+description: 
+advice: 
+version: 2.0.23075
+priority: 0
+licenseRequired: False
+productClasses: 
+setupScript: setup.opsiscript
+uninstallScript: uninstall.opsiscript
+updateScript: 
+alwaysScript: 
+onceScript: 
+customScript: 
+userLoginScript: 
